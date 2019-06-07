@@ -1,53 +1,49 @@
 package metier;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Objects;
 
-
 public class Utilise implements Serializable {
-    private Vehicule vehicule;
-    private Client client;
+    private int vehicule;
+    private int client;
     private Timestamp date;
+    private int borneDepart;
+    private int borneArrivee;
 
-
-    public Vehicule getVehicule() {
+    public int getVehicule() {
         return vehicule;
     }
-
-    public void setVehicule(Vehicule vehicule) {
+    public void setVehicule(int vehicule) {
         this.vehicule = vehicule;
     }
 
-
-    public Client getClient() {
+    public int getClient() {
         return client;
     }
-
-    public void setClient(Client client) {
+    public void setClient(int client) {
         this.client = client;
     }
 
     public Timestamp getDate() {
         return date;
     }
-
     public void setDate(Timestamp date) {
         this.date = date;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Utilise that = (Utilise) o;
-        return vehicule == that.vehicule &&
-                client == that.client &&
-                Objects.equals(date, that.date);
+    public int getBorneDepart() {
+        return borneDepart;
+    }
+    public void setBorneDepart(int borneDepart) {
+        this.borneDepart = borneDepart;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(vehicule, client, date);
+    public int getBorneArrivee() {
+        return borneArrivee;
+    }
+    public void setBorneArrivee(int borneArrivee) {
+        this.borneArrivee = borneArrivee;
     }
 }

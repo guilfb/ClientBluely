@@ -6,7 +6,7 @@
 <%@include file="navigation.jsp"%>
 
 	<div class="jumbotron text-center">
-		<h1>Rendre votre <c:out value="${vehicule.typeVehicule.typeVehicule}"> </c:out> à la station <c:out value="${station.adresse}"> </c:out> </h1>
+		<h1>Rendre votre <c:out value="${utilise.vehicule.typeVehicule.typeVehicule}"> </c:out> à la station <c:out value="${station.adresse}"> </c:out> </h1>
 	</div>
 
 	<div class="container">
@@ -21,7 +21,7 @@
 				<c:forEach items="${bornes}" var="item">
 					<tr>
 						<td>${item.idBorne}</td>
-						<td><a class="btn btn-info" href="Controleur?action=rendre&idBorne=${item.idBorne}&idVehicule=${vehicule.idVehicule}" role="button"><span
+						<td><a class="btn btn-info" href="Controleur?action=rendre&idBorne=${item.idBorne}" role="button"><span
 								class="glyphicon glyphicon-arrow-down"></span> Rendre à cette borne</a></td>
 					</tr>
 				</c:forEach>
@@ -31,3 +31,8 @@
 <%@include file="footer.jsp"%>
 </body>
 </html>
+<script>
+	window.bornes = ${bornes};
+	window.utilise = ${utilise};
+	window.station = ${station};
+</script>

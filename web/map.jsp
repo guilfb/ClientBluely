@@ -135,9 +135,9 @@
         window.stations.forEach(function(item) {
             window.bornes.forEach(function(elem) {
                 if(elem.stationBorne.idStation === item.idStation) {
-                    if(elem.etatBorne === 1) {
+                    if(elem.etatBorne === 0) {
                         window.nbVehicules[item.idStation - 1]++;
-                    }else if(elem.etatBorne === 0) {
+                    }else if(elem.etatBorne === 1) {
                         window.nbPlaces[item.idStation - 1]++;
                     }
                 }
@@ -269,11 +269,10 @@
                                         + elem.stationBorne.cpStation + ', '
                                         + elem.stationBorne.villeStation + '<br /><br />'
                                         + '<img src="./resources/images/logo_parking.png" alt="Parking Slot" height="50" width="50"> '
-                                        + ' ' + window.nbPlaces[elem.stationBorne.idStation -1]
+                                        + window.nbPlaces[elem.stationBorne.idStation -1]
                                         + '<img src="./resources/images/logo_voiture.png" alt="Vehicule" height="50" width="50"> '
                                         + window.nbVehicules[elem.stationBorne.idStation -1] + '</p>'
                                         + 'Utilisation en cours'
-                                        + '<button name="rendre" id="'+elem.stationBorne.idStation+'" onclick="makeUrlRendre('+elem.stationBorne.idStation+');"/>Rendre</button>'
                                         + '</div>');
                             }else{
                                 marker = L.marker([elem.stationBorne.latitudeStation, elem.stationBorne.longitudeStation])
@@ -301,17 +300,35 @@
                 if (elem.vehiculeBorne.idVehicule === "NO_VEHICULE") {
                     if (window.stationsAffiche.indexOf(elem.stationBorne.idStation) === -1) {
                         window.stationsAffiche.push(elem.stationBorne.idStation);
-                        marker = L.marker([elem.stationBorne.latitudeStation, elem.stationBorne.longitudeStation])
-                            .addTo(map)
-                            .bindPopup('<div><p>'
-                                + elem.stationBorne.numAdresseStation + ', '
-                                + elem.stationBorne.adresseStation + '<br />'
-                                + elem.stationBorne.cpStation + ', '
-                                + elem.stationBorne.villeStation + '<br /><br />'
-                                + '<img src="./resources/images/logo_parking.png" alt="Parking Slot" height="50" width="50"> '
-                                + ' ' + window.nbPlaces[elem.stationBorne.idStation -1] + ' <br />'
-                                + '<img src="./resources/images/logo_voiture.png" alt="Vehicule" height="50" width="50"> '
-                                + window.nbVehicules[elem.stationBorne.idStation -1] + '</p>' );
+
+                        if(window.alreadyUsed) {
+                            marker = L.marker([elem.stationBorne.latitudeStation, elem.stationBorne.longitudeStation])
+                                .addTo(map)
+                                .bindPopup('<div><p>'
+                                    + elem.stationBorne.numAdresseStation + ', '
+                                    + elem.stationBorne.adresseStation + '<br />'
+                                    + elem.stationBorne.cpStation + ', '
+                                    + elem.stationBorne.villeStation + '<br /><br />'
+                                    + '<img src="./resources/images/logo_parking.png" alt="Parking Slot" height="50" width="50"> '
+                                    + window.nbPlaces[elem.stationBorne.idStation -1]
+                                    + '<img src="./resources/images/logo_voiture.png" alt="Vehicule" height="50" width="50"> '
+                                    + window.nbVehicules[elem.stationBorne.idStation -1] + '</p>'
+                                    + 'Utilisation en cours'
+                                    + '<button name="rendre" id="'+elem.stationBorne.idStation+'" onclick="makeUrlRendre('+elem.stationBorne.idStation+');"/>Rendre</button>'
+                                    + '</div>');
+                        }else{
+                            marker = L.marker([elem.stationBorne.latitudeStation, elem.stationBorne.longitudeStation])
+                                .addTo(map)
+                                .bindPopup('<div><p>'
+                                    + elem.stationBorne.numAdresseStation + ', '
+                                    + elem.stationBorne.adresseStation + '<br />'
+                                    + elem.stationBorne.cpStation + ', '
+                                    + elem.stationBorne.villeStation + '<br /><br />'
+                                    + '<img src="./resources/images/logo_parking.png" alt="Parking Slot" height="50" width="50"> '
+                                    + ' ' + window.nbPlaces[elem.stationBorne.idStation -1] + ' <br />'
+                                    + '<img src="./resources/images/logo_voiture.png" alt="Vehicule" height="50" width="50"> '
+                                    + window.nbVehicules[elem.stationBorne.idStation -1] + '</p>' );
+                        }
                         window.marker.push(marker);
                     }
                 }

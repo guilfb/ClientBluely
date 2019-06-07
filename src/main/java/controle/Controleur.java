@@ -55,6 +55,8 @@ public class Controleur extends HttpServlet {
     private static final String RESERVER = "reserver";
     private static final String RENDRE_VEHICULE = "rendreVehicule";
     private static final String RENDRE = "rendre";
+    private static final String UTILISE_VEHICULE = "utiliseVehicule";
+    private static final String UTILISE = "utilise";
 
     @Resource(lookup = "java:jboss/exported/topic/DemandeInscriptionJmsTopic")
     private Topic topic;
@@ -209,7 +211,6 @@ public class Controleur extends HttpServlet {
                 }
             }
 
-
             request.setAttribute("mesUsed", alreadyUsed);
             request.setAttribute("mesResa",alreadyReserved);
             request.setAttribute("bornes",arrayBuilder.build().toString());
@@ -286,9 +287,6 @@ public class Controleur extends HttpServlet {
                 reservation.setDateEcheance(maxDate);
                 reservation.setDateReservation(currentDate);
                 reservation.setVehicule(vehicule);
-
-
-                session.setAttribute("idVehicule", vehicule.getIdVehicule());
 
                 EnvoiReservation unEnvoi = new EnvoiReservation();
                 boolean ok = unEnvoi.publier(reservation,topic,cf);
@@ -370,16 +368,39 @@ public class Controleur extends HttpServlet {
         else if (RENDRE.equals(actionName)) {
             try {
                 HttpSession session = request.getSession();
-                int idClient = (int) session.getAttribute("id");
 
-                VehiculeService vehiculeService = new VehiculeService();
-                ClientService clientService = new ClientService();
+                int idClient = (int)session.getAttribute("id");
+                int idBorne = Integer.parseInt(request.getParameter("idBorne"));
 
-                // Recup de l'id véhicule
-                int numeroVehicule = Integer.parseInt(request.getParameter("idVehicule"));
+                UtiliseEntity useFinal = null;
+                UtilisationService useService = new UtilisationService();
+                List<UtiliseEntity> listUse = useService.consulterListeUtilisations(idClient);
 
-                VehiculeEntity vehiculeEntity = vehiculeService.consulterVehiculeById(numeroVehicule);
+                for (UtiliseEntity use : listUse) {
+                    if (use.getBorneArrivee() == null) {
+                        useFinal = use;
+                    }
+                }
+
+                Utilise utilise = new Utilise();
+                utilise.setVehicule(useFinal.getVehicule().getIdVehicule());
+                utilise.setClient(useFinal.getClient().getIdClient());
+                utilise.setDate(useFinal.getDate());
+                utilise.setBorneDepart(useFinal.getBorneDepart().getIdBorne());
+                utilise.setBorneArrivee(idBorne);
+
+                EnvoiUtilise unEnvoi = new EnvoiUtilise();
+                boolean ok = unEnvoi.publier(utilise,topic,cf);
+                if (ok) {
+                    // On retourne à la page d'accueil
+                    this.getServletContext().getRequestDispatcher("/index.jsp").include(request, response);
+                } else {
+                    this.getServletContext().getRequestDispatcher("/Erreur.jsp").include(request, response);
+                }
+
+                /*
                 ClientEntity clientEntity = clientService.consulterClientById(idClient);
+                BorneEntity borne = borneService.consulterBorneById(idClient);
 
                 Client client = new Client();
                 client.setIdClient(clientEntity.getIdClient());
@@ -390,29 +411,103 @@ public class Controleur extends HttpServlet {
                 client.setPrenom(clientEntity.getPrenom());
 
                 TypeVehicule typeVehicule = new TypeVehicule();
-                typeVehicule.setIdTypeVehicule(vehiculeEntity.getTypeVehicule().getIdTypeVehicule());
-                typeVehicule.setCategorie(vehiculeEntity.getTypeVehicule().getCategorie());
-                typeVehicule.setTypeVehicule(vehiculeEntity.getTypeVehicule().getTypeVehicule());
+                typeVehicule.setIdTypeVehicule(useFinal.getVehicule().getTypeVehicule().getIdTypeVehicule());
+                typeVehicule.setCategorie(useFinal.getVehicule().getTypeVehicule().getCategorie());
+                typeVehicule.setTypeVehicule(useFinal.getVehicule().getTypeVehicule().getTypeVehicule());
 
                 Vehicule vehicule = new Vehicule();
-                vehicule.setIdVehicule(vehiculeEntity.getIdVehicule());
-                vehicule.setDisponibilite(vehiculeEntity.getDisponibilite());
-                vehicule.setEtatBatterie(vehiculeEntity.getEtatBatterie());
-                vehicule.setLatitude(vehiculeEntity.getLatitude());
-                vehicule.setLongitude(vehiculeEntity.getLongitude());
-                vehicule.setRfid(vehiculeEntity.getRfid());
+                vehicule.setIdVehicule(useFinal.getVehicule().getIdVehicule());
+                vehicule.setDisponibilite(useFinal.getVehicule().getDisponibilite());
+                vehicule.setEtatBatterie(useFinal.getVehicule().getEtatBatterie());
+                vehicule.setLatitude(useFinal.getVehicule().getLatitude());
+                vehicule.setLongitude(useFinal.getVehicule().getLongitude());
+                vehicule.setRfid(useFinal.getVehicule().getRfid());
                 vehicule.setTypeVehicule(typeVehicule);
 
-                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                LocalDateTime localDate = LocalDateTime.now();
-                Timestamp currentDate = Timestamp.valueOf(localDate);
-                Timestamp maxDate = Timestamp.valueOf(localDate.plusDays(1));
+                Borne borneDepart = new Borne();
+                borneDepart.setIdBorne(useFinal.getBorneDepart().getIdBorne());
+                borneDepart.setEtatBorne(useFinal.getBorneDepart().getEtatBorne());
+                borneDepart.setVehicule(vehicule);
+
+                Borne borneArrivee = new Borne();
+                borneArrivee.setIdBorne(borne.getIdBorne());
+                borneArrivee.setEtatBorne((byte) 0);
+                borneArrivee.setVehicule(vehicule);
 
                 Utilise utilise = new Utilise();
                 utilise.setClient(client);
                 utilise.setVehicule(vehicule);
+                utilise.setDate(useFinal.getDate());
+                utilise.setBorneDepart(borneDepart);
+                utilise.setBorneArrivee(borneArrivee);
+*/
 
+            } catch (MonException m) {
+                // On passe l'erreur à  la page JSP
+                request.setAttribute("MesErreurs", m.getMessage());
+                request.getRequestDispatcher("PostMessage.jsp").forward(request, response);
+            } catch (Exception e) {
+                // On passe l'erreur à la page JSP
+                System.out.println("Erreur client  :" + e.getMessage());
+                request.setAttribute("MesErreurs", e.getMessage());
+                request.getRequestDispatcher("PostMessage.jsp").forward(request, response);
+            }
+        }
+        else if(RENDRE_VEHICULE.equals(actionName)){
+            String destinationPage;
+            try {
+                BorneService borneService = new BorneService();
+                HttpSession session = request.getSession();
+                int idClient = (int)session.getAttribute("id");
+                int idStation = Integer.parseInt(request.getParameter("idStation"));
 
+                StationService stationService = new StationService();
+                UtilisationService useService = new UtilisationService();
+
+                // Erreur ici, probleme provenant probablement de UtiliseEntity
+                List<UtiliseEntity> listUse = useService.consulterListeUtilisations(idClient);
+                UtiliseEntity useFinal = null;
+
+                for (UtiliseEntity use : listUse) {
+                    if (use.getBorneArrivee() == null) {
+                        useFinal = use;
+                    }
+                }
+
+                List<BorneEntity> listBorne = borneService.getListBorneByStationWithNoVehicule(idStation);
+                StationEntity station = stationService.consulterStationById(idStation);
+
+                request.setAttribute("utilise", useFinal);
+                request.setAttribute("bornes", listBorne);
+                request.setAttribute("station", station);
+
+                destinationPage = "/rendreVehicule.jsp";
+
+            } catch (Exception e) {
+                request.setAttribute("MesErreurs", e.getMessage());
+                destinationPage = "/Erreur.jsp";
+            }
+
+            this.getServletContext().getRequestDispatcher(destinationPage).include(request, response);
+        }
+        else if (UTILISE.equals(actionName)) {
+            try {
+                HttpSession session = request.getSession();
+
+                int idClient = (int)session.getAttribute("id");
+                int idBorne = Integer.parseInt(request.getParameter("idBorne"));
+
+                BorneService borneService = new BorneService();
+                BorneEntity borne = borneService.consulterBorneById(idBorne);
+
+                LocalDateTime localDate = LocalDateTime.now();
+                Timestamp currentDate = Timestamp.valueOf(localDate);
+
+                Utilise utilise = new Utilise();
+                utilise.setVehicule(borne.getVehicule().getIdVehicule());
+                utilise.setClient(idClient);
+                utilise.setDate(currentDate);
+                utilise.setBorneDepart(idBorne);
 
                 EnvoiUtilise unEnvoi = new EnvoiUtilise();
                 boolean ok = unEnvoi.publier(utilise,topic,cf);
@@ -433,33 +528,33 @@ public class Controleur extends HttpServlet {
                 request.getRequestDispatcher("PostMessage.jsp").forward(request, response);
             }
         }
-        else if(RENDRE_VEHICULE.equals(actionName)){
+        else if(UTILISE_VEHICULE.equals(actionName)){
             String destinationPage;
             try {
                 BorneService borneService = new BorneService();
+                UtilisationService useService = new UtilisationService();
                 int idStation = Integer.parseInt(request.getParameter("idStation"));
 
-                StationService stationService = new StationService();
+                List<BorneEntity> listBorne = borneService.getListBorneByStationWithVehicule(idStation);
+                List<UtiliseEntity> listAllUse = useService.consulterUtilisations();
+                List<UtiliseEntity> useAct = new ArrayList<>();
 
-                List<BorneEntity> listBorne = borneService.getListBorneByStationWithNoVehicule(idStation);
-
-
-                StationEntity station = stationService.consulterStationById(idStation);
+                if (listAllUse != null) {
+                    for (UtiliseEntity use: listAllUse) {
+                        if (use.getBorneArrivee() == null) {
+                            useAct.add(use);
+                        }
+                    }
+                }
 
                 request.setAttribute("bornes", listBorne);
-                request.setAttribute("station", station);
-                HttpSession session = request.getSession();
-                int idVehicule = (int) session.getAttribute("idVehicule");
-                VehiculeService vehiculeService = new VehiculeService();
-                VehiculeEntity vehicule = vehiculeService.consulterVehiculeById(idVehicule);
+                request.setAttribute("utilises", useAct);
 
-                request.setAttribute("vehicule", vehicule);
+                destinationPage = "/utiliseVehicule.jsp";
 
-                destinationPage = "/rendreVehicule.jsp";
             } catch (Exception e) {
                 request.setAttribute("MesErreurs", e.getMessage());
                 destinationPage = "/Erreur.jsp";
-
             }
 
             this.getServletContext().getRequestDispatcher(destinationPage).include(request, response);

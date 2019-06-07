@@ -13,16 +13,7 @@ public class ReservationEntity implements Serializable {
     private ClientEntity client;
     private Timestamp dateReservation;
     private Timestamp dateEcheance;
-/*
-    @ManyToOne
-    @JoinColumn(name = "vehicule", referencedColumnName = "idVehicule", nullable = false)
-    public VehiculeEntity getVehicule() {
-        return vehicule;
-    }
-    public void setVehicule(VehiculeEntity vehicule) {
-        this.vehicule = vehicule;
-    }
-*/
+
     @ManyToOne
     @JoinColumn(name = "vehicule", referencedColumnName = "idVehicule")
     public VehiculeEntity getVehicule() {

@@ -9,27 +9,49 @@ import java.util.Objects;
 @Table(name = "utilise", schema = "autolib", catalog = "")
 @IdClass(UtiliseEntityPK.class)
 public class UtiliseEntity implements Serializable {
-    private int vehicule;
-    private int client;
+    private VehiculeEntity vehicule;
+    private ClientEntity client;
+    //private int vehicule;
+    //private int client;
     private Timestamp date;
+    private BorneEntity borneDepart;
+    private BorneEntity borneArrivee;
 
+/*
     @Id
-    @Column(name = "Vehicule")
+    @Column(name = "vehicule")
     public int getVehicule() {
         return vehicule;
     }
-
     public void setVehicule(int vehicule) {
         this.vehicule = vehicule;
     }
 
     @Id
-    @Column(name = "Client")
+    @Column(name = "client")
     public int getClient() {
         return client;
     }
-
     public void setClient(int client) {
+        this.client = client;
+    }
+*/
+
+    @ManyToOne
+    @JoinColumn(name = "vehicule", referencedColumnName = "idVehicule")
+    public VehiculeEntity getVehicule() {
+        return vehicule;
+    }
+    public void setVehicule(VehiculeEntity vehicule) {
+        this.vehicule = vehicule;
+    }
+
+    @ManyToOne
+    @JoinColumn(name = "client", referencedColumnName="idClient")
+    public ClientEntity getClient() {
+        return client;
+    }
+    public void setClient(ClientEntity client) {
         this.client = client;
     }
 
@@ -38,9 +60,26 @@ public class UtiliseEntity implements Serializable {
     public Timestamp getDate() {
         return date;
     }
-
     public void setDate(Timestamp date) {
         this.date = date;
+    }
+
+    @ManyToOne
+    @JoinColumn(name = "borne_depart", referencedColumnName = "idBorne")
+    public BorneEntity getBorneDepart() {
+        return borneDepart;
+    }
+    public void setBorneDepart(BorneEntity borneDepart) {
+        this.borneDepart = borneDepart;
+    }
+
+    @ManyToOne
+    @JoinColumn(name = "borne_arrivee", referencedColumnName = "idBorne")
+    public BorneEntity getBorneArrivee() {
+        return borneArrivee;
+    }
+    public void setBorneArrivee(BorneEntity borneArrivee) {
+        this.borneArrivee = borneArrivee;
     }
 
     @Override
