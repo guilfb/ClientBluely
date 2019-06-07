@@ -53,6 +53,8 @@ public class Controleur extends HttpServlet {
     private static final String MON_ESPACE = "monEspace";
     private static final String RESERVER_VEHICULE = "reserverVehicule";
     private static final String RESERVER = "reserver";
+    private static final String RENDRE_VEHICULE = "rendreVehicule";
+    private static final String RENDRE = "rendre";
 
     @Resource(lookup = "java:jboss/exported/topic/DemandeInscriptionJmsTopic")
     private Topic topic;
@@ -285,6 +287,9 @@ public class Controleur extends HttpServlet {
                 reservation.setDateReservation(currentDate);
                 reservation.setVehicule(vehicule);
 
+
+                session.setAttribute("idVehicule", vehicule.getIdVehicule());
+
                 EnvoiReservation unEnvoi = new EnvoiReservation();
                 boolean ok = unEnvoi.publier(reservation,topic,cf);
                 if (ok) {
@@ -354,6 +359,103 @@ public class Controleur extends HttpServlet {
                 request.setAttribute("resas", resaAct);
 
                 destinationPage = "/reserverVehicule.jsp";
+            } catch (Exception e) {
+                request.setAttribute("MesErreurs", e.getMessage());
+                destinationPage = "/Erreur.jsp";
+
+            }
+
+            this.getServletContext().getRequestDispatcher(destinationPage).include(request, response);
+        }
+        else if (RENDRE.equals(actionName)) {
+            try {
+                HttpSession session = request.getSession();
+                int idClient = (int) session.getAttribute("id");
+
+                VehiculeService vehiculeService = new VehiculeService();
+                ClientService clientService = new ClientService();
+
+                // Recup de l'id véhicule
+                int numeroVehicule = Integer.parseInt(request.getParameter("idVehicule"));
+
+                VehiculeEntity vehiculeEntity = vehiculeService.consulterVehiculeById(numeroVehicule);
+                ClientEntity clientEntity = clientService.consulterClientById(idClient);
+
+                Client client = new Client();
+                client.setIdClient(clientEntity.getIdClient());
+                client.setDateNaissance(clientEntity.getDateNaissance());
+                client.setLogin(clientEntity.getLogin());
+                client.setMotdepasse(clientEntity.getMotdepasse());
+                client.setNom(clientEntity.getNom());
+                client.setPrenom(clientEntity.getPrenom());
+
+                TypeVehicule typeVehicule = new TypeVehicule();
+                typeVehicule.setIdTypeVehicule(vehiculeEntity.getTypeVehicule().getIdTypeVehicule());
+                typeVehicule.setCategorie(vehiculeEntity.getTypeVehicule().getCategorie());
+                typeVehicule.setTypeVehicule(vehiculeEntity.getTypeVehicule().getTypeVehicule());
+
+                Vehicule vehicule = new Vehicule();
+                vehicule.setIdVehicule(vehiculeEntity.getIdVehicule());
+                vehicule.setDisponibilite(vehiculeEntity.getDisponibilite());
+                vehicule.setEtatBatterie(vehiculeEntity.getEtatBatterie());
+                vehicule.setLatitude(vehiculeEntity.getLatitude());
+                vehicule.setLongitude(vehiculeEntity.getLongitude());
+                vehicule.setRfid(vehiculeEntity.getRfid());
+                vehicule.setTypeVehicule(typeVehicule);
+
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                LocalDateTime localDate = LocalDateTime.now();
+                Timestamp currentDate = Timestamp.valueOf(localDate);
+                Timestamp maxDate = Timestamp.valueOf(localDate.plusDays(1));
+
+                Utilise utilise = new Utilise();
+                utilise.setClient(client);
+                utilise.setVehicule(vehicule);
+
+
+
+                EnvoiUtilise unEnvoi = new EnvoiUtilise();
+                boolean ok = unEnvoi.publier(utilise,topic,cf);
+                if (ok) {
+                    // On retourne à la page d'accueil
+                    this.getServletContext().getRequestDispatcher("/index.jsp").include(request, response);
+                } else {
+                    this.getServletContext().getRequestDispatcher("/Erreur.jsp").include(request, response);
+                }
+            } catch (MonException m) {
+                // On passe l'erreur à  la page JSP
+                request.setAttribute("MesErreurs", m.getMessage());
+                request.getRequestDispatcher("PostMessage.jsp").forward(request, response);
+            } catch (Exception e) {
+                // On passe l'erreur à la page JSP
+                System.out.println("Erreur client  :" + e.getMessage());
+                request.setAttribute("MesErreurs", e.getMessage());
+                request.getRequestDispatcher("PostMessage.jsp").forward(request, response);
+            }
+        }
+        else if(RENDRE_VEHICULE.equals(actionName)){
+            String destinationPage;
+            try {
+                BorneService borneService = new BorneService();
+                int idStation = Integer.parseInt(request.getParameter("idStation"));
+
+                StationService stationService = new StationService();
+
+                List<BorneEntity> listBorne = borneService.getListBorneByStationWithNoVehicule(idStation);
+
+
+                StationEntity station = stationService.consulterStationById(idStation);
+
+                request.setAttribute("bornes", listBorne);
+                request.setAttribute("station", station);
+                HttpSession session = request.getSession();
+                int idVehicule = (int) session.getAttribute("idVehicule");
+                VehiculeService vehiculeService = new VehiculeService();
+                VehiculeEntity vehicule = vehiculeService.consulterVehiculeById(idVehicule);
+
+                request.setAttribute("vehicule", vehicule);
+
+                destinationPage = "/rendreVehicule.jsp";
             } catch (Exception e) {
                 request.setAttribute("MesErreurs", e.getMessage());
                 destinationPage = "/Erreur.jsp";

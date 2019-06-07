@@ -68,6 +68,25 @@ public class BorneService extends EntityService {
 		return mesBornes;
 	}
 
+	public List<BorneEntity> getListBorneByStationWithNoVehicule(int idStation) throws MonException {
+		List<BorneEntity> mesBornes = null;
+		try {
+			EntityTransaction transac = startTransaction();
+			transac.begin();
+
+			mesBornes = (List<BorneEntity>)
+					entitymanager.createQuery(
+							"SELECT a FROM BorneEntity a " +
+									"WHERE a.etatBorne=1 and a.station="+idStation).getResultList();
+			entitymanager.close();
+		}catch (RuntimeException e) {
+			new MonException("Erreur de lecture", e.getMessage());
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+		return mesBornes;
+	}
+
 	public int getNbParking(int idStation) throws MonException {
 		List<BorneEntity> mesBornes = null;
 		int nbVehicule = 0;
