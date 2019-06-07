@@ -7,15 +7,24 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "reservation", schema = "autolib", catalog = "")
-@IdClass(ReservationEntityPK.class)
+//@IdClass(ReservationEntityPK.class)
 public class ReservationEntity implements Serializable {
     private VehiculeEntity vehicule;
     private ClientEntity client;
     private Timestamp dateReservation;
     private Timestamp dateEcheance;
-
+/*
     @ManyToOne
     @JoinColumn(name = "vehicule", referencedColumnName = "idVehicule", nullable = false)
+    public VehiculeEntity getVehicule() {
+        return vehicule;
+    }
+    public void setVehicule(VehiculeEntity vehicule) {
+        this.vehicule = vehicule;
+    }
+*/
+    @ManyToOne
+    @JoinColumn(name = "vehicule", referencedColumnName = "idVehicule")
     public VehiculeEntity getVehicule() {
         return vehicule;
     }
@@ -41,7 +50,7 @@ public class ReservationEntity implements Serializable {
         this.dateReservation = dateReservation;
     }
 
-    @Id
+    @Basic
     @Column(name = "date_echeance")
     public Timestamp getDateEcheance() {
         return dateEcheance;

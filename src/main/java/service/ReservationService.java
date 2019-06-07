@@ -25,4 +25,21 @@ public class ReservationService extends EntityService {
 		}
 		return mesRes;
 	}
+
+	public List<ReservationEntity> consulterReservations() throws MonException {
+		List<ReservationEntity> mesRes = null;
+		try {
+			EntityTransaction transac = startTransaction();
+			transac.begin();
+			mesRes = (List<ReservationEntity>)
+					entitymanager.createQuery(
+							"SELECT a FROM ReservationEntity a ").getResultList();
+			entitymanager.close();
+		} catch (RuntimeException e) {
+			new MonException("Erreur de lecture", e.getMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return mesRes;
+	}
 }

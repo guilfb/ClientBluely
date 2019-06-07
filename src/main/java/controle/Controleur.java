@@ -20,7 +20,9 @@ import service.*;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -137,6 +139,13 @@ public class Controleur extends HttpServlet {
         else if (MAP.equals(actionName)) {
             JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
             JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+
+            HttpSession session = request.getSession();
+            int idClient = (int)session.getAttribute("id");
+
+            ReservationService resaService = new ReservationService();
+            UtilisationService useService = new UtilisationService();
+
             BorneService borneService = new BorneService();
             List<BorneEntity> listeBornes = borneService.consulterListeBornes();
 
@@ -173,6 +182,34 @@ public class Controleur extends HttpServlet {
                 arrayBuilder.add(objectBuilder);
                 objectBuilder = Json.createObjectBuilder();
             }
+
+            List<ReservationEntity> listAllResa = resaService.consulterReservations();
+
+            boolean alreadyReserved = false;
+            LocalDateTime localDate = LocalDateTime.now();
+            Timestamp currentDate = Timestamp.valueOf(localDate);
+
+            if (listAllResa != null) {
+                for (ReservationEntity resa: listAllResa) {
+                    if (currentDate.after(resa.getDateReservation()) && currentDate.before(resa.getDateEcheance())) {
+                        if (resa.getClient().getIdClient() == idClient) {
+                            alreadyReserved = true;
+                        }
+                    }
+                }
+            }
+
+            boolean alreadyUsed = false;
+            List<UtiliseEntity> listUse = useService.consulterListeUtilisations(idClient);
+            if(listUse != null) {
+                if(listUse.size() > 0) {
+                    alreadyUsed = true;
+                }
+            }
+
+
+            request.setAttribute("mesUsed", alreadyUsed);
+            request.setAttribute("mesResa",alreadyReserved);
             request.setAttribute("bornes",arrayBuilder.build().toString());
 
             this.getServletContext().getRequestDispatcher("/map.jsp").include(request, response);
@@ -188,15 +225,8 @@ public class Controleur extends HttpServlet {
 
 
                 List<ReservationEntity> listResa = reservationService.consulterListeReservations(idUtilisateur);
-                List<ReservationEntity> listResaFinale = null;
 
-                for (ReservationEntity reservationEntity : listResa) {
-                    if(reservationEntity.getClient().getIdClient() == idUtilisateur) {
-                        listResaFinale.add(reservationEntity);
-                    }
-                }
-
-                request.setAttribute("mesReservations", listResaFinale);
+                request.setAttribute("mesReservations", listResa);
                 List<UtiliseEntity> listUtilise = utiliseService.consulterListeUtilisations(idUtilisateur);
                 request.setAttribute("mesUtilisations", listUtilise);
 
@@ -245,9 +275,9 @@ public class Controleur extends HttpServlet {
                 vehicule.setTypeVehicule(typeVehicule);
 
                 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                LocalDate localDate = LocalDate.now();
-                Timestamp currentDate = Timestamp.valueOf(localDate.atStartOfDay());
-                Timestamp maxDate = Timestamp.valueOf(localDate.plusDays(1).atStartOfDay());
+                LocalDateTime localDate = LocalDateTime.now();
+                Timestamp currentDate = Timestamp.valueOf(localDate);
+                Timestamp maxDate = Timestamp.valueOf(localDate.plusDays(1));
 
                 Reservation reservation = new Reservation();
                 reservation.setClient(client);
@@ -294,8 +324,6 @@ public class Controleur extends HttpServlet {
                         id = borne.getVehicule().getTypeVehicule().getIdTypeVehicule();
                         idRecup = Integer.parseInt(request.getParameter("id"+i));
 
-                        System.out.println(id + " " + idRecup);
-
                         if (id == idRecup) {
                             borneFinale = borne;
                             boucle = false;
@@ -305,7 +333,25 @@ public class Controleur extends HttpServlet {
                     i++;
                 }
                 */
+
+                ReservationService resaService = new ReservationService();
+
+                List<ReservationEntity> listAllResa = resaService.consulterReservations();
+
+                LocalDateTime localDate = LocalDateTime.now();
+                Timestamp currentDate = Timestamp.valueOf(localDate);
+                List<ReservationEntity> resaAct = new ArrayList<>();
+
+                if (listAllResa != null) {
+                    for (ReservationEntity resa: listAllResa) {
+                        if (currentDate.after(resa.getDateReservation()) && currentDate.before(resa.getDateEcheance())) {
+                            resaAct.add(resa);
+                        }
+                    }
+                }
+
                 request.setAttribute("bornes", listBorne);
+                request.setAttribute("resas", resaAct);
 
                 destinationPage = "/reserverVehicule.jsp";
             } catch (Exception e) {

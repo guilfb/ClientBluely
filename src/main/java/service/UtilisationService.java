@@ -82,6 +82,24 @@ public class UtilisationService extends EntityService {
 		return mesRes;
 	}
 
+	public List<UtiliseEntity> consulterUtilisations() throws MonException {
+		List<UtiliseEntity> mesRes = null;
+		try {
+			EntityTransaction transac = startTransaction();
+			transac.begin();
+			mesRes = (List<UtiliseEntity>)
+					entitymanager.createQuery(
+							"SELECT o FROM UtiliseEntity o").getResultList();
+			entitymanager.close();
+
+		} catch (RuntimeException e) {
+			new MonException("Erreur de lecture", e.getMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return mesRes;
+	}
+
 
 
 }

@@ -52,6 +52,9 @@
 <script>
 
     window.bornes = ${bornes};
+    window.alreadyReserved = ${mesResa};
+    window.alreadyUsed = ${mesUsed};
+
     window.stations = [];
     window.vehicules = [];
     window.typeVehicules = [];
@@ -242,18 +245,52 @@
 
                             window.idTemp = elem.stationBorne.idBorne;
 
-                            marker = L.marker([elem.stationBorne.latitudeStation, elem.stationBorne.longitudeStation])
-                                .addTo(map)
-                                .bindPopup('<div><p>'
-                                    + elem.stationBorne.numAdresseStation + ', '
-                                    + elem.stationBorne.adresseStation + '<br />'
-                                    + elem.stationBorne.cpStation + ', '
-                                    + elem.stationBorne.villeStation + '<br /><br />'
-                                    + '<img src="./resources/images/logo_parking.png" alt="Parking Slot" height="50" width="50"> '
-                                    + ' ' + window.nbPlaces[elem.stationBorne.idStation -1] + ' <br />'
-                                    + '<img src="./resources/images/logo_voiture.png" alt="Vehicule" height="50" width="50"> '
-                                    + window.nbVehicules[elem.stationBorne.idStation -1] + '</p>' +
-                                    '<button name="reservation" id="'+elem.stationBorne.idStation+'" onclick="makeUrl('+elem.stationBorne.idStation+');"/>Réserver</button>' + '</div>');
+                            if(window.alreadyReserved && !window.alreadyUsed){
+                                marker = L.marker([elem.stationBorne.latitudeStation, elem.stationBorne.longitudeStation])
+                                    .addTo(map)
+                                    .bindPopup('<div><p>'
+                                        + elem.stationBorne.numAdresseStation + ', '
+                                        + elem.stationBorne.adresseStation + '<br />'
+                                        + elem.stationBorne.cpStation + ', '
+                                        + elem.stationBorne.villeStation + '<br /><br />'
+                                        + '<img src="./resources/images/logo_parking.png" alt="Parking Slot" height="50" width="50"> '
+                                        + ' ' + window.nbPlaces[elem.stationBorne.idStation -1] + ' <br />'
+                                        + '<img src="./resources/images/logo_voiture.png" alt="Vehicule" height="50" width="50"> '
+                                        + window.nbVehicules[elem.stationBorne.idStation -1] + '</p>'
+                                        + 'Reservation en cours'
+                                        + '<button name="retirer" id="'+elem.stationBorne.idStation+'" onclick="makeUrlRetirer('+elem.stationBorne.idStation+');"/>Retirer</button>' +
+                                        + '</div>');
+                            }else if(window.alreadyUsed) {
+                                marker = L.marker([elem.stationBorne.latitudeStation, elem.stationBorne.longitudeStation])
+                                    .addTo(map)
+                                    .bindPopup('<div><p>'
+                                        + elem.stationBorne.numAdresseStation + ', '
+                                        + elem.stationBorne.adresseStation + '<br />'
+                                        + elem.stationBorne.cpStation + ', '
+                                        + elem.stationBorne.villeStation + '<br /><br />'
+                                        + '<img src="./resources/images/logo_parking.png" alt="Parking Slot" height="50" width="50"> '
+                                        + ' ' + window.nbPlaces[elem.stationBorne.idStation -1]
+                                        + '<img src="./resources/images/logo_voiture.png" alt="Vehicule" height="50" width="50"> '
+                                        + window.nbVehicules[elem.stationBorne.idStation -1] + '</p>'
+                                        + 'Utilisation en cours'
+                                        + '<button name="rendre" id="'+elem.stationBorne.idStation+'" onclick="makeUrlRendre('+elem.stationBorne.idStation+');"/>Rendre</button>'
+                                        + '</div>');
+                            }else{
+                                marker = L.marker([elem.stationBorne.latitudeStation, elem.stationBorne.longitudeStation])
+                                    .addTo(map)
+                                    .bindPopup('<div><p>'
+                                        + elem.stationBorne.numAdresseStation + ', '
+                                        + elem.stationBorne.adresseStation + '<br />'
+                                        + elem.stationBorne.cpStation + ', '
+                                        + elem.stationBorne.villeStation + '<br /><br />'
+                                        + '<img src="./resources/images/logo_parking.png" alt="Parking Slot" height="50" width="50"> '
+                                        + ' ' + window.nbPlaces[elem.stationBorne.idStation -1]
+                                        + '<img src="./resources/images/logo_voiture.png" alt="Vehicule" height="50" width="50"> '
+                                        + window.nbVehicules[elem.stationBorne.idStation -1] + '</p>'
+                                        + '<button name="reservation" id="'+elem.stationBorne.idStation+'" onclick="makeUrlReserver('+elem.stationBorne.idStation+');"/>Réserver</button>'
+                                        + '<button name="retirer" id="'+elem.stationBorne.idStation+'" onclick="makeUrlRetirer('+elem.stationBorne.idStation+');"/>Retirer</button>'
+                                        + '</div>');
+                            }
                             window.marker.push(marker);
                         }
                     }
@@ -282,7 +319,7 @@
         }
     };
 
-	function makeUrl(idStation) {
+	function makeUrlReserver(idStation) {
 	    var urlTemp = "";
         var i=0;
         window.typeVehicules.forEach(function(elem) {
@@ -295,6 +332,27 @@
         });
 
         var url = "Controleur?action=reserverVehicule&idStation=" + idStation + "&idV=" + i + urlTemp;
+        window.location.href = url;
+    };
+
+	function makeUrlRendre(idStation) {
+        var url = "Controleur?action=rendreVehicule&idStation=" + idStation
+        window.location.href = url;
+    };
+
+	function makeUrlRetirer(idStation) {
+        var urlTemp = "";
+        var i=0;
+        window.typeVehicules.forEach(function(elem) {
+            window.vehiculeChoisis.forEach(function(item) {
+                if(elem.TV === item) {
+                    urlTemp+="&id"+i+"="+elem.idTV;
+                    i++;
+                }
+            });
+        });
+
+        var url = "Controleur?action=retirerVehicule&idStation=" + idStation + "&idV=" + i + urlTemp;
         window.location.href = url;
     };
 
