@@ -236,6 +236,12 @@
         window.stationsAffiche = [];
         var marker;
 
+        if(window.alreadyUsed){
+            $("input[type='radio'][id='reservation']").prop("checked",false);
+            $("input[type='radio'][id='parking']").prop("checked",true);
+            window.parking = true;
+        }
+
         if(window.parking === false) {
             window.bornes.forEach(function(elem) {
                 if (elem.vehiculeBorne.idVehicule !== "NO_VEHICULE") {

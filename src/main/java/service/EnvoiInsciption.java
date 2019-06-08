@@ -1,12 +1,12 @@
 package service;
 
 import meserreurs.MonException;
+import metier.Client;
 import metier.Inscription;
-
 
 import javax.jms.*;
 
-public class EnvoiInscription {
+public class EnvoiInsciption {
 
     // Session établie avec le serveur
     private TopicSession session = null;
@@ -18,11 +18,11 @@ public class EnvoiInscription {
     /**
      * Permet de publier une demande d'inscription dans le topic
      *
-     * @param uneDemande La demande d'inscription � publier
+     * @param unClient La demande d'inscription à publier
      * @return
      * @throws Exception
      */
- public    boolean  publier(Inscription uneDemande,Topic topic, TopicConnectionFactory cf) throws Exception {
+ public    boolean  publier(Inscription unClient, Topic topic, TopicConnectionFactory cf) throws Exception {
 
         boolean ok = true;
         TopicConnection connection = null;
@@ -38,7 +38,7 @@ public class EnvoiInscription {
             // On lance la connection
             connection.start();
             ObjectMessage message = session.createObjectMessage();
-            message.setObject(uneDemande);
+            message.setObject(unClient);
 
             // On publie le message
             producer.publish(message);

@@ -10,7 +10,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.Type;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -19,7 +18,6 @@ import metier.*;
 import service.*;
 
 import java.sql.Date;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -40,13 +38,9 @@ public class Controleur extends HttpServlet {
     private static final String AJOUTER_INSCRIPTION = "ajouteInscription";
     private static final String ENVOI_INSCRIPTION = "envoiInscription";
 
-    private static final String ERREUR = "Erreur";
-    private static final String FOOTER = "footer";
-    private static final String HEADER = "header";
-    private static final String NAVIGATION = "navigation";
-
     private static final String CONTROLE_LOGIN = "controleLogin";
     private static final String CREER_COMPTE = "creerCompte";
+    private static final String VALIDER_COMPTE = "insererClient";
     private static final String FORM_LOGIN = "formLogin";
     private static final String INDEX = "index";
     private static final String MAP = "map";
@@ -55,8 +49,8 @@ public class Controleur extends HttpServlet {
     private static final String RESERVER = "reserver";
     private static final String RENDRE_VEHICULE = "rendreVehicule";
     private static final String RENDRE = "rendre";
-    private static final String UTILISE_VEHICULE = "utiliseVehicule";
-    private static final String UTILISE = "utilise";
+    private static final String RETIRER_VEHICULE = "retirerVehicule";
+    private static final String RETIRER = "retirer";
 
     @Resource(lookup = "java:jboss/exported/topic/DemandeInscriptionJmsTopic")
     private Topic topic;
@@ -91,7 +85,6 @@ public class Controleur extends HttpServlet {
         // On récupère l'action
         String actionName = request.getParameter(ACTION_TYPE);
 
-        // Si on veut afficher l'ensemble des demandes d'inscription
         if (AJOUTER_INSCRIPTION.equals(actionName)) {
             request.getRequestDispatcher("/AjouteInscription.jsp").forward(request, response);
         }
@@ -100,6 +93,47 @@ public class Controleur extends HttpServlet {
         }
         else if (CREER_COMPTE.equals(actionName)) {
             this.getServletContext().getRequestDispatcher("/creerCompte.jsp").include(request, response);
+        }
+        else if(VALIDER_COMPTE.equals(actionName)) {
+            String destinationPage;
+            try {
+                ClientService clientService = new ClientService();
+
+                String login = request.getParameter("login");
+                String pwd = request.getParameter("password");
+                String nom = request.getParameter("nom");
+                String prenom = request.getParameter("prenom");
+                String datenaissance = request.getParameter("datenaissance");
+                java.util.Date initDate = new SimpleDateFormat("yyyy-MM-dd").parse(datenaissance);
+                Date uneDate = new Date(initDate.getTime());
+
+                List<ClientEntity> clientEntity = clientService.consulterClientByLogin(login);
+
+                if(clientEntity.size() < 1) {
+                    Client unClient = new Client();
+
+                    unClient.setNom(nom);
+                    unClient.setPrenom(prenom);
+                    unClient.setDateNaissance(uneDate);
+                    unClient.setLogin(login);
+                    unClient.setMotdepasse(pwd);
+
+                    EnvoiClient envoiClient = new EnvoiClient();
+                    envoiClient.publier(unClient,topic,cf);
+
+                    destinationPage = "/index.jsp";
+                }else{
+                    request.setAttribute("MesErreurs", "Utilisateur deja existant.");
+                    destinationPage = "/creerCompte.jsp";
+                }
+            } catch (MonException e) {
+                request.setAttribute("MesErreurs", e.getMessage());
+                destinationPage = "/Erreur.jsp";
+            } catch (Exception e) {
+                request.setAttribute("MesErreurs", e.getMessage());
+                destinationPage = "/Erreur.jsp";
+            }
+            this.getServletContext().getRequestDispatcher(destinationPage).include(request, response);
         }
         else if (FORM_LOGIN.equals(actionName)) {
             this.getServletContext().getRequestDispatcher("/formLogin.jsp").include(request, response);
@@ -398,7 +432,7 @@ public class Controleur extends HttpServlet {
                     this.getServletContext().getRequestDispatcher("/Erreur.jsp").include(request, response);
                 }
 
-                /*
+/*
                 ClientEntity clientEntity = clientService.consulterClientById(idClient);
                 BorneEntity borne = borneService.consulterBorneById(idClient);
 
@@ -441,7 +475,6 @@ public class Controleur extends HttpServlet {
                 utilise.setBorneDepart(borneDepart);
                 utilise.setBorneArrivee(borneArrivee);
 */
-
             } catch (MonException m) {
                 // On passe l'erreur à  la page JSP
                 request.setAttribute("MesErreurs", m.getMessage());
@@ -490,12 +523,12 @@ public class Controleur extends HttpServlet {
 
             this.getServletContext().getRequestDispatcher(destinationPage).include(request, response);
         }
-        else if (UTILISE.equals(actionName)) {
+        else if (RETIRER.equals(actionName)) {
             try {
                 HttpSession session = request.getSession();
 
                 int idClient = (int)session.getAttribute("id");
-                int idBorne = Integer.parseInt(request.getParameter("idBorne"));
+                int idBorne = Integer.parseInt(request.getParameter("idVehicule"));
 
                 BorneService borneService = new BorneService();
                 BorneEntity borne = borneService.consulterBorneById(idBorne);
@@ -528,29 +561,33 @@ public class Controleur extends HttpServlet {
                 request.getRequestDispatcher("PostMessage.jsp").forward(request, response);
             }
         }
-        else if(UTILISE_VEHICULE.equals(actionName)){
+        else if(RETIRER_VEHICULE.equals(actionName)){
             String destinationPage;
             try {
                 BorneService borneService = new BorneService();
-                UtilisationService useService = new UtilisationService();
+                ReservationService resaService = new ReservationService();
+
                 int idStation = Integer.parseInt(request.getParameter("idStation"));
-
                 List<BorneEntity> listBorne = borneService.getListBorneByStationWithVehicule(idStation);
-                List<UtiliseEntity> listAllUse = useService.consulterUtilisations();
-                List<UtiliseEntity> useAct = new ArrayList<>();
 
-                if (listAllUse != null) {
-                    for (UtiliseEntity use: listAllUse) {
-                        if (use.getBorneArrivee() == null) {
-                            useAct.add(use);
+                LocalDateTime localDate = LocalDateTime.now();
+                Timestamp currentDate = Timestamp.valueOf(localDate);
+
+                List<ReservationEntity> resaAct = new ArrayList<>();
+                List<ReservationEntity> listAllResa = resaService.consulterReservations();
+
+                if (listAllResa != null) {
+                    for (ReservationEntity resa: listAllResa) {
+                        if (currentDate.after(resa.getDateReservation()) && currentDate.before(resa.getDateEcheance())) {
+                            resaAct.add(resa);
                         }
                     }
                 }
 
+                request.setAttribute("resas", resaAct);
                 request.setAttribute("bornes", listBorne);
-                request.setAttribute("utilises", useAct);
 
-                destinationPage = "/utiliseVehicule.jsp";
+                destinationPage = "/retirerVehicule.jsp";
 
             } catch (Exception e) {
                 request.setAttribute("MesErreurs", e.getMessage());
@@ -593,7 +630,7 @@ public class Controleur extends HttpServlet {
                     unedemande.setVille(ville);
 
                     // On envoie cette demande d'inscription dans le topic
-                    EnvoiInscription unEnvoi = new EnvoiInscription();
+                    EnvoiInsciption unEnvoi = new EnvoiInsciption();
                     boolean ok = unEnvoi.publier(unedemande,topic,cf);
                     if (ok) {
                         // On retourne àla page d'accueil

@@ -49,25 +49,23 @@ public class ClientService extends EntityService {
         return client;
     }
 
-    public UtilisateurEntity consulterClientByLogin(String login) throws MonException {
-        List<UtilisateurEntity> mesClients = null;
-        UtilisateurEntity client = new UtilisateurEntity();
+    public List<ClientEntity> consulterClientByLogin(String username) throws MonException {
+        List<ClientEntity> mesClients = null;
         try {
             EntityTransaction transac = startTransaction();
             transac.begin();
 
-            mesClients = (List<UtilisateurEntity>)
+            mesClients = (List<ClientEntity>)
                     entitymanager.createQuery(
-                            "SELECT a FROM UtilisateurEntity a " +
-                                    "WHERE a.nomUtil="+login).getResultList();
+                            "SELECT a FROM ClientEntity a " +
+                                    "WHERE a.login='"+username+"'").getResultList();
 
-           mesClients.get(0);
             entitymanager.close();
         }catch (RuntimeException e) {
             new MonException("Erreur de lecture", e.getMessage());
         }catch (Exception e) {
             e.printStackTrace();
         }
-        return client;
+        return mesClients;
     }
 }

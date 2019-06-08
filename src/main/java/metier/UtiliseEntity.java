@@ -7,38 +7,16 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "utilise", schema = "autolib", catalog = "")
-@IdClass(UtiliseEntityPK.class)
+//@IdClass(UtiliseEntityPK.class)
 public class UtiliseEntity implements Serializable {
     private VehiculeEntity vehicule;
     private ClientEntity client;
-    //private int vehicule;
-    //private int client;
     private Timestamp date;
     private BorneEntity borneDepart;
     private BorneEntity borneArrivee;
 
-/*
-    @Id
-    @Column(name = "vehicule")
-    public int getVehicule() {
-        return vehicule;
-    }
-    public void setVehicule(int vehicule) {
-        this.vehicule = vehicule;
-    }
-
-    @Id
-    @Column(name = "client")
-    public int getClient() {
-        return client;
-    }
-    public void setClient(int client) {
-        this.client = client;
-    }
-*/
-
     @ManyToOne
-    @JoinColumn(name = "vehicule", referencedColumnName = "idVehicule")
+    @JoinColumn(name = "vehicule", referencedColumnName = "idVehicule", nullable = false)
     public VehiculeEntity getVehicule() {
         return vehicule;
     }
@@ -47,7 +25,7 @@ public class UtiliseEntity implements Serializable {
     }
 
     @ManyToOne
-    @JoinColumn(name = "client", referencedColumnName="idClient")
+    @JoinColumn(name = "client", referencedColumnName="idClient", nullable = false)
     public ClientEntity getClient() {
         return client;
     }
