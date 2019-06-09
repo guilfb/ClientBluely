@@ -39,6 +39,20 @@
                     </label>
                 </form>
             </div>
+
+            <div id="reservationEnCours" style="margin-bottom: 100px;">
+                <c:forEach items="${resaPerso}" var="item">
+                    Vous avez réservé une <c:out value="${item.vehicule.typeVehicule.typeVehicule}"/>.
+                    Allez voir votre <a href="Controleur?action=monEspace" >espace</a> pour de plus amples informations.
+                </c:forEach>
+            </div>
+
+            <div id="utilisationEnCours">
+                <c:forEach items="${usePerso}" var="item">
+                    Vous être en train d'utiliser une <c:out value="${item.vehicule.typeVehicule.typeVehicule}"/>.
+                    Allez voir votre <a href="Controleur?action=monEspace" >espace</a> pour de plus amples informations.
+                </c:forEach>
+            </div>
         </div>
 
     </div>
@@ -49,11 +63,13 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+
 <script>
 
     window.bornes = ${bornes};
     window.alreadyReserved = ${mesResa};
     window.alreadyUsed = ${mesUsed};
+    window.verif = ${mesUsed};
 
     window.stations = [];
     window.vehicules = [];
@@ -67,7 +83,6 @@
     window.nbPlaces = [];
     window.url = "";
     window.parking = false;
-
     window.idTemp = 0;
 
     remplirListes();
@@ -182,9 +197,9 @@
         triMarker();
     });
 
-	function ifChecked() {
-	    window.categAffiche = [];
-	    window.categVehicules.forEach(function(value) {
+    function ifChecked() {
+        window.categAffiche = [];
+        window.categVehicules.forEach(function(value) {
             if($("input[type='checkbox'][value='"+value.categTV+"']").prop("checked")) {
                 window.categAffiche.push(value.categTV);
             }
@@ -227,8 +242,8 @@
         });
     };
 
-	function triMarker() {
-	    window.marker.forEach(function(item) {
+    function triMarker() {
+        window.marker.forEach(function(item) {
             map.removeLayer(item);
         });
 
@@ -236,10 +251,11 @@
         window.stationsAffiche = [];
         var marker;
 
-        if(window.alreadyUsed){
+        if(window.alreadyUsed && window.verif){
             $("input[type='radio'][id='reservation']").prop("checked",false);
             $("input[type='radio'][id='parking']").prop("checked",true);
             window.parking = true;
+            window.verif = false;
         }
 
         if(window.parking === false) {
@@ -264,7 +280,7 @@
                                         + '<img src="./resources/images/logo_voiture.png" alt="Vehicule" height="50" width="50"> '
                                         + window.nbVehicules[elem.stationBorne.idStation -1] + '</p>'
                                         + 'Reservation en cours'
-                                        + '<button name="retirer" id="'+elem.stationBorne.idStation+'" onclick="makeUrlRetirer('+elem.stationBorne.idStation+');"/>Retirer</button>' +
+                                        + '<button name="retirer" id="'+elem.stationBorne.idStation+'" onclick="makeUrlRetirer('+elem.stationBorne.idStation+');"/>Retirer</button>'
                                         + '</div>');
                             }else if(window.alreadyUsed) {
                                 marker = L.marker([elem.stationBorne.latitudeStation, elem.stationBorne.longitudeStation])
@@ -342,8 +358,8 @@
         }
     };
 
-	function makeUrlReserver(idStation) {
-	    var urlTemp = "";
+    function makeUrlReserver(idStation) {
+        var urlTemp = "";
         var i=0;
         window.typeVehicules.forEach(function(elem) {
             window.vehiculeChoisis.forEach(function(item) {
@@ -358,12 +374,12 @@
         window.location.href = url;
     };
 
-	function makeUrlRendre(idStation) {
+    function makeUrlRendre(idStation) {
         var url = "Controleur?action=rendreVehicule&idStation=" + idStation
         window.location.href = url;
     };
 
-	function makeUrlRetirer(idStation) {
+    function makeUrlRetirer(idStation) {
         var urlTemp = "";
         var i=0;
         window.typeVehicules.forEach(function(elem) {
@@ -378,5 +394,29 @@
         var url = "Controleur?action=retirerVehicule&idStation=" + idStation + "&idV=" + i + urlTemp;
         window.location.href = url;
     };
+/*
+    function fillReservationEnCours() {
+        window.bornes.forEach(function(elem) {
+            window.resaPerso.forEach(function(item) {
+                if(elem.vehicule.idVehicule === item.vehicule.idVehicule) {
+                    $('#reservationEnCours').append("Vous avez réservé une " + item.vehicule.typeVehicule.typeVehicule
+                        + " qui se situé à l'adresse suivante : "
+                        + elem.station.numero + " " + elem.station.adresse + ".");
+                }
+            });
+        });
+    };
 
+    function fillUtilisationEnCours() {
+        window.bornes.forEach(function(elem) {
+            window.usePerso.forEach(function(item) {
+                if(elem.vehicule.idVehicule === item.vehicule.idVehicule) {
+                    $('#reservationEnCours').append("Vous avez réservé une " + item.vehicule.typeVehicule.typeVehicule
+                        + " qui se situé à l'adresse suivante : "
+                        + elem.station.numero + " " + elem.station.adresse + ".");
+                }
+            });
+        });
+    };
+*/
 </script>

@@ -42,6 +42,7 @@ public class Controleur extends HttpServlet {
     private static final String CREER_COMPTE = "creerCompte";
     private static final String VALIDER_COMPTE = "insererClient";
     private static final String FORM_LOGIN = "formLogin";
+    private static final String LOGOUT = "logout";
     private static final String INDEX = "index";
     private static final String MAP = "map";
     private static final String MON_ESPACE = "monEspace";
@@ -94,6 +95,11 @@ public class Controleur extends HttpServlet {
         else if (CREER_COMPTE.equals(actionName)) {
             this.getServletContext().getRequestDispatcher("/creerCompte.jsp").include(request, response);
         }
+        else if (LOGOUT.equals(actionName)) {
+            HttpSession session = request.getSession();
+            session.invalidate();
+            this.getServletContext().getRequestDispatcher("/index.jsp").include(request, response);
+        }
         else if(VALIDER_COMPTE.equals(actionName)) {
             String destinationPage;
             try {
@@ -111,6 +117,8 @@ public class Controleur extends HttpServlet {
 
                 if(clientEntity.size() < 1) {
                     Client unClient = new Client();
+
+                    pwd = FonctionsUtiles.md5(pwd);
 
                     unClient.setNom(nom);
                     unClient.setPrenom(prenom);
@@ -227,11 +235,14 @@ public class Controleur extends HttpServlet {
             LocalDateTime localDate = LocalDateTime.now();
             Timestamp currentDate = Timestamp.valueOf(localDate);
 
+            List<ReservationEntity> resaPerso = new ArrayList<>();
+
             if (listAllResa != null) {
                 for (ReservationEntity resa: listAllResa) {
                     if (currentDate.after(resa.getDateReservation()) && currentDate.before(resa.getDateEcheance())) {
                         if (resa.getClient().getIdClient() == idClient) {
                             alreadyReserved = true;
+                            resaPerso.add(resa);
                         }
                     }
                 }
@@ -239,10 +250,26 @@ public class Controleur extends HttpServlet {
 
             boolean alreadyUsed = false;
             List<UtiliseEntity> listUse = useService.consulterListeUtilisations(idClient);
+            List<UtiliseEntity> usePerso = new ArrayList<>();
             if(listUse != null) {
-                if(listUse.size() > 0) {
-                    alreadyUsed = true;
+                for(UtiliseEntity use : listUse) {
+                    if(use.getBorneArrivee() == null) {
+                        alreadyUsed = true;
+                        usePerso.add(use);
+                    }
                 }
+            }
+
+            if(resaPerso.size() < 1) {
+                request.setAttribute("resaPerso", null);
+            } else {
+                request.setAttribute("resaPerso", resaPerso);
+            }
+
+            if(usePerso.size() < 1) {
+                request.setAttribute("usePerso", null);
+            } else {
+                request.setAttribute("usePerso", resaPerso);
             }
 
             request.setAttribute("mesUsed", alreadyUsed);
@@ -528,7 +555,7 @@ public class Controleur extends HttpServlet {
                 HttpSession session = request.getSession();
 
                 int idClient = (int)session.getAttribute("id");
-                int idBorne = Integer.parseInt(request.getParameter("idVehicule"));
+                int idBorne = Integer.parseInt(request.getParameter("idBorne"));
 
                 BorneService borneService = new BorneService();
                 BorneEntity borne = borneService.consulterBorneById(idBorne);
@@ -564,6 +591,9 @@ public class Controleur extends HttpServlet {
         else if(RETIRER_VEHICULE.equals(actionName)){
             String destinationPage;
             try {
+                HttpSession session = request.getSession();
+                int idClient = (int)session.getAttribute("id");
+
                 BorneService borneService = new BorneService();
                 ReservationService resaService = new ReservationService();
 
@@ -574,17 +604,23 @@ public class Controleur extends HttpServlet {
                 Timestamp currentDate = Timestamp.valueOf(localDate);
 
                 List<ReservationEntity> resaAct = new ArrayList<>();
+                List<ReservationEntity> resaBooked = new ArrayList<>();
                 List<ReservationEntity> listAllResa = resaService.consulterReservations();
 
                 if (listAllResa != null) {
                     for (ReservationEntity resa: listAllResa) {
                         if (currentDate.after(resa.getDateReservation()) && currentDate.before(resa.getDateEcheance())) {
-                            resaAct.add(resa);
+                            if(resa.getClient().getIdClient() == idClient) {
+                                resaBooked.add(resa);
+                            }else{
+                                resaAct.add(resa);
+                            }
                         }
                     }
                 }
 
                 request.setAttribute("resas", resaAct);
+                request.setAttribute("mesResas", resaBooked);
                 request.setAttribute("bornes", listBorne);
 
                 destinationPage = "/retirerVehicule.jsp";

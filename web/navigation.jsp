@@ -84,7 +84,7 @@
                     Mon espace
                 </a>
             </li>
-            <li><a href="javascript:fermer()" style="fontSize: 15px;"><span class="glyphicon glyphicon-log-out"></span> Quitter</a></li>
+            <li><a href="Controleur?action=logout" style="fontSize: 15px;"><span class="glyphicon glyphicon-log-out"></span> Quitter</a></li>
         </c:if>
     </div>
 

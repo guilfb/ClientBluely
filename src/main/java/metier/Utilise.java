@@ -1,16 +1,14 @@
 package metier;
 
-import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.Objects;
 
 public class Utilise implements Serializable {
     private int vehicule;
     private int client;
     private Timestamp date;
     private int borneDepart;
-    private int borneArrivee;
+    private Integer borneArrivee;
 
     public int getVehicule() {
         return vehicule;
@@ -40,10 +38,10 @@ public class Utilise implements Serializable {
         this.borneDepart = borneDepart;
     }
 
-    public int getBorneArrivee() {
+    public Integer getBorneArrivee() {
         return borneArrivee;
     }
-    public void setBorneArrivee(int borneArrivee) {
+    public void setBorneArrivee(Integer borneArrivee) {
         this.borneArrivee = borneArrivee;
     }
 }

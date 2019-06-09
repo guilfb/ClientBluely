@@ -40,13 +40,17 @@
 			<table class="table table-hover">
 				<tr>
 					<th class="col-md-2">Véhicule</th>
-					<th class="col-md-4">Date</th>
+					<th class="col-md-2">Date</th>
+					<th class="col-md-3">Borne de départ</th>
+					<th class="col-md-3">Borne d'arrivée</th>
 				</tr>
 
 				<c:forEach items="${mesUtilisations}" var="item">
 					<tr>
-						<td>${item.vehicule}</td>
+						<td>${item.vehicule.typeVehicule.typeVehicule}</td>
 						<td>${item.date}</td>
+						<td>${item.borneDepart.station.numero} ${item.borneDepart.station.adresse},<br />${item.borneDepart.station.codePostal} ${item.borneDepart.station.ville}</td>
+						<td>${item.borneArrivee.station.numero} ${item.borneArrivee.station.adresse},<br />${item.borneArrivee.station.codePostal} ${item.borneArrivee.station.ville}</td>
 					</tr>
 				</c:forEach>
 			</table>

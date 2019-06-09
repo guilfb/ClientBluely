@@ -14,6 +14,7 @@ public class BorneService extends EntityService {
 		{
 			EntityTransaction transac = startTransaction();
 			transac.begin();
+
 			mesBornes = (List<BorneEntity>)
 					entitymanager.createQuery(
 							"SELECT a FROM BorneEntity a " +
