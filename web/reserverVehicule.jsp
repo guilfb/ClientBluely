@@ -29,19 +29,20 @@
 					<td><c:out value="${borne.vehicule.typeVehicule.typeVehicule}" /></td>
 					<td><c:out value="${borne.idBorne}" /></td>
 					<td><c:out value="${borne.vehicule.etatBatterie}"/> %</td>
+					<c:set var="test" scope="session" value="false" />
 					<c:forEach items="${resas}" var="item">
-						<c:set var="test" scope="session" value="false" />
 						<c:if test="${item.vehicule.idVehicule == borne.vehicule.idVehicule}">
+							<c:out value="${item.vehicule.idVehicule}" />
 							<c:set var="test" scope="session" value="true" />
 						</c:if>
 					</c:forEach>
 					<c:choose>
-						<c:when test="${test == false}">
-							<td><a class="btn btn-info" href="Controleur?action=reserver&idVehicule=${borne.vehicule.idVehicule}" role="button"><span
-									class="glyphicon glyphicon-pencil"></span> Reserver</a></td>
+						<c:when test="${test == true}">
+							<td>Cette voiture est reservée</td>
 						</c:when>
 						<c:otherwise>
-							<td>Cette voiture est reservée</td>
+							<td><a class="btn btn-info" href="Controleur?action=reserver&idVehicule=${borne.vehicule.idVehicule}" role="button"><span
+									class="glyphicon glyphicon-pencil"></span> Reserver</a></td>
 						</c:otherwise>
 					</c:choose>
 

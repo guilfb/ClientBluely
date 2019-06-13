@@ -12,8 +12,6 @@
 
 <body>
 <%@include file="navigation.jsp"%>
-
-<c:if test="${sessionScope.id > 0 }">
 	<div class="row" style="margin-right: 50px; margin-left: 50px; margin-top: 50px;">
 
         <div class="col-sm-2">
@@ -40,6 +38,7 @@
                 </form>
             </div>
 
+            <!-- Affiche un message lorsque l'utilisateur a réservé une voiture -->
             <div id="reservationEnCours" style="margin-bottom: 100px;">
                 <c:forEach items="${resaPerso}" var="item">
                     Vous avez réservé une <c:out value="${item.vehicule.typeVehicule.typeVehicule}"/>.
@@ -47,6 +46,7 @@
                 </c:forEach>
             </div>
 
+            <!- Affiche un message lorsque l'utilsiateur a retiré une voiture -->
             <div id="utilisationEnCours">
                 <c:forEach items="${usePerso}" var="item">
                     Vous être en train d'utiliser une <c:out value="${item.vehicule.typeVehicule.typeVehicule}"/>.
@@ -56,7 +56,6 @@
         </div>
 
     </div>
-</c:if>
 <%@include file="footer.jsp"%>
 </body>
 </html>
@@ -139,14 +138,17 @@
             return false;
         });
 
+        // Initialisation liste nombre véhicules
         window.stations.forEach(function(item) {
             window.nbVehicules[item.idStation - 1] = 0;
         });
 
+        // Initialisation liste nombre places
         window.stations.forEach(function(item) {
             window.nbPlaces[item.idStation - 1] = 0;
         });
 
+        // Calcul du nombre de places/véhicules par borne
         window.stations.forEach(function(item) {
             window.bornes.forEach(function(elem) {
                 if(elem.stationBorne.idStation === item.idStation) {
@@ -162,15 +164,18 @@
         remplirCategVehicule();
     };
 
+    // Fonction d'initialisation de la carte
     function afficherMap() {
         window.map = L.map('map', {
             center: [45.76, 4.835],
             zoom: 13
         });
+
         var osmLayer = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors',
             maxZoom: 19
         });
+
         map.addLayer(osmLayer);
 
         window.myIcon = L.icon({
@@ -182,21 +187,26 @@
 
     };
 
+    // Lorsque le formulaire du catégorie véhicule
     $('#formType').change(function() {
         ifChecked();
         ifCheckedVehicule();
     });
 
+    // Lorsque le formulaire des véhicules
     $('#formVehicule').change(function() {
         ifCheckedVehicule();
     });
 
+    // Lorsque le formulaire parking ou reservation change
     $('#formParking').change(function() {
         window.parking = $("input[type='radio'][id='parking']").prop("checked");
 
+        // Change les markers selon le parking choisi
         triMarker();
     });
 
+    // Remplit la liste des catégories à afficher
     function ifChecked() {
         window.categAffiche = [];
         window.categVehicules.forEach(function(value) {
@@ -207,6 +217,7 @@
         remplirVehicule();
     };
 
+    // Remplit la liste des véhicules à afficher
     function ifCheckedVehicule() {
         window.vehiculeChoisis = [];
         window.typeVehicules.forEach(function(value) {
@@ -217,6 +228,7 @@
         triMarker();
     };
 
+    // Remplir le formulaire selon la catégorie cliquée
     function remplirCategVehicule() {
         window.categVehicules.forEach(function(value) {
             $("#formType").append("<div class=\"form-check\">\n" +
@@ -228,6 +240,7 @@
         ifCheckedVehicule();
     };
 
+    // Remplir le formulaire de voiture selon la catégorie choisie
     function remplirVehicule() {
         $("#formVehicule").empty();
 
@@ -242,15 +255,20 @@
         });
     };
 
+    // Fonction permettant de placer les makers selon les formulaires
     function triMarker() {
+        // Retire tous les markers
         window.marker.forEach(function(item) {
             map.removeLayer(item);
         });
 
+        // Initialise les variables globales contenant les markers et les stations affichées
         window.marker = [];
         window.stationsAffiche = [];
         var marker;
 
+        // Si la personne a retiré une voiture, alors on le met directement sur le mode parking pour chercher une place
+        // pour se garer
         if(window.alreadyUsed && window.verif){
             $("input[type='radio'][id='reservation']").prop("checked",false);
             $("input[type='radio'][id='parking']").prop("checked",true);
@@ -258,16 +276,22 @@
             window.verif = false;
         }
 
+        // Si on cherche à réserver/retirer une voiture
         if(window.parking === false) {
             window.bornes.forEach(function(elem) {
+                // Si la borne contient un véhicule
                 if (elem.vehiculeBorne.idVehicule !== "NO_VEHICULE") {
+                    // Si le véhicule de la borne est dans les véhicule à afficher
                     if (window.vehiculeChoisis.indexOf(elem.vehiculeBorne.typeVehicule.TV) !== -1) {
+                        // Si la station où se trouve la borne est dans les bornes à afficher
                         if (window.stationsAffiche.indexOf(elem.stationBorne.idStation) === -1) {
                             window.stationsAffiche.push(elem.stationBorne.idStation);
 
                             window.idTemp = elem.stationBorne.idBorne;
 
+                            // Si la personne a réservé une voiture mais pas retiré la voiture en question
                             if(window.alreadyReserved && !window.alreadyUsed){
+                                // On ajoute le marker et son popup adapté
                                 marker = L.marker([elem.stationBorne.latitudeStation, elem.stationBorne.longitudeStation])
                                     .addTo(map)
                                     .bindPopup('<div><p>'
@@ -282,6 +306,7 @@
                                         + 'Reservation en cours'
                                         + '<button name="retirer" id="'+elem.stationBorne.idStation+'" onclick="makeUrlRetirer('+elem.stationBorne.idStation+');"/>Retirer</button>'
                                         + '</div>');
+                            // Si la personne a retiré la voiture
                             }else if(window.alreadyUsed) {
                                 marker = L.marker([elem.stationBorne.latitudeStation, elem.stationBorne.longitudeStation])
                                     .addTo(map)
@@ -296,6 +321,7 @@
                                         + window.nbVehicules[elem.stationBorne.idStation -1] + '</p>'
                                         + 'Utilisation en cours'
                                         + '</div>');
+                            // Si la personne n'a ni réservé ni retiré de véhicule
                             }else{
                                 marker = L.marker([elem.stationBorne.latitudeStation, elem.stationBorne.longitudeStation])
                                     .addTo(map)
@@ -317,12 +343,16 @@
                     }
                 }
             });
+        // Si on cherche à trouver une place de parking
         }else{
             window.bornes.forEach(function(elem) {
+                // Si la borne ne contient pas de véhicule
                 if (elem.vehiculeBorne.idVehicule === "NO_VEHICULE") {
+                    // Si la station où la borne se trouv eest a afficher
                     if (window.stationsAffiche.indexOf(elem.stationBorne.idStation) === -1) {
                         window.stationsAffiche.push(elem.stationBorne.idStation);
 
+                        // Si la personne a retiré une voiture
                         if(window.alreadyUsed) {
                             marker = L.marker([elem.stationBorne.latitudeStation, elem.stationBorne.longitudeStation])
                                 .addTo(map)
@@ -338,6 +368,7 @@
                                     + 'Utilisation en cours'
                                     + '<button name="rendre" id="'+elem.stationBorne.idStation+'" onclick="makeUrlRendre('+elem.stationBorne.idStation+');"/>Rendre</button>'
                                     + '</div>');
+                        // Si la personne n'a ni retiré de véhicule
                         }else{
                             marker = L.marker([elem.stationBorne.latitudeStation, elem.stationBorne.longitudeStation])
                                 .addTo(map)
@@ -358,27 +389,30 @@
         }
     };
 
+    // Créer l'url lors d'une réservation
     function makeUrlReserver(idStation) {
         var urlTemp = "";
         var i=0;
         window.typeVehicules.forEach(function(elem) {
             window.vehiculeChoisis.forEach(function(item) {
+                // Si les véhicules choisis sont dans les catégories à afficher
                 if(elem.TV === item) {
                     urlTemp+="&id"+i+"="+elem.idTV;
                     i++;
                 }
             });
         });
-
         var url = "Controleur?action=reserverVehicule&idStation=" + idStation + "&idV=" + i + urlTemp;
         window.location.href = url;
     };
 
+    // Créer l'url lorsque l'on veut rendre un véhicule
     function makeUrlRendre(idStation) {
         var url = "Controleur?action=rendreVehicule&idStation=" + idStation
         window.location.href = url;
     };
 
+    // Créer l'url lors d'un retrait
     function makeUrlRetirer(idStation) {
         var urlTemp = "";
         var i=0;
@@ -394,29 +428,5 @@
         var url = "Controleur?action=retirerVehicule&idStation=" + idStation + "&idV=" + i + urlTemp;
         window.location.href = url;
     };
-/*
-    function fillReservationEnCours() {
-        window.bornes.forEach(function(elem) {
-            window.resaPerso.forEach(function(item) {
-                if(elem.vehicule.idVehicule === item.vehicule.idVehicule) {
-                    $('#reservationEnCours').append("Vous avez réservé une " + item.vehicule.typeVehicule.typeVehicule
-                        + " qui se situé à l'adresse suivante : "
-                        + elem.station.numero + " " + elem.station.adresse + ".");
-                }
-            });
-        });
-    };
 
-    function fillUtilisationEnCours() {
-        window.bornes.forEach(function(elem) {
-            window.usePerso.forEach(function(item) {
-                if(elem.vehicule.idVehicule === item.vehicule.idVehicule) {
-                    $('#reservationEnCours').append("Vous avez réservé une " + item.vehicule.typeVehicule.typeVehicule
-                        + " qui se situé à l'adresse suivante : "
-                        + elem.station.numero + " " + elem.station.adresse + ".");
-                }
-            });
-        });
-    };
-*/
 </script>

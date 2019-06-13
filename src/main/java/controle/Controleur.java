@@ -19,7 +19,6 @@ import service.*;
 
 import java.sql.Date;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,9 +33,6 @@ public class Controleur extends HttpServlet {
 
     private static final long serialVersionUID = 10L;
     private static final String ACTION_TYPE = "action";
-
-    private static final String AJOUTER_INSCRIPTION = "ajouteInscription";
-    private static final String ENVOI_INSCRIPTION = "envoiInscription";
 
     private static final String CONTROLE_LOGIN = "controleLogin";
     private static final String CREER_COMPTE = "creerCompte";
@@ -82,14 +78,12 @@ public class Controleur extends HttpServlet {
         }
     }
 
-    public void TraiteRequete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, MonException {
+    public void TraiteRequete(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, MonException {
         // On récupère l'action
         String actionName = request.getParameter(ACTION_TYPE);
 
-        if (AJOUTER_INSCRIPTION.equals(actionName)) {
-            request.getRequestDispatcher("/AjouteInscription.jsp").forward(request, response);
-        }
-        else if (INDEX.equals(actionName)) {
+        if (INDEX.equals(actionName)) {
             this.getServletContext().getRequestDispatcher("/index.jsp").include(request, response);
         }
         else if (CREER_COMPTE.equals(actionName)) {
@@ -150,7 +144,7 @@ public class Controleur extends HttpServlet {
             String destinationPage = "";
             String login = request.getParameter("login");
             String pwd = request.getParameter("pwd");
-            String message ="";
+            String message = "";
             try {
                 Service unService = new Service();
                 ClientEntity unUtilisateur = unService.getUtilisateur(login);
@@ -289,8 +283,8 @@ public class Controleur extends HttpServlet {
 
 
                 List<ReservationEntity> listResa = reservationService.consulterListeReservations(idUtilisateur);
-
                 request.setAttribute("mesReservations", listResa);
+
                 List<UtiliseEntity> listUtilise = utiliseService.consulterListeUtilisations(idUtilisateur);
                 request.setAttribute("mesUtilisations", listUtilise);
 
@@ -310,7 +304,6 @@ public class Controleur extends HttpServlet {
                 VehiculeService vehiculeService = new VehiculeService();
                 ClientService clientService = new ClientService();
 
-                // Recup de l'id véhicule
                 int numeroVehicule = Integer.parseInt(request.getParameter("idVehicule"));
 
                 VehiculeEntity vehiculeEntity = vehiculeService.consulterVehiculeById(numeroVehicule);
@@ -338,7 +331,6 @@ public class Controleur extends HttpServlet {
                 vehicule.setRfid(vehiculeEntity.getRfid());
                 vehicule.setTypeVehicule(typeVehicule);
 
-                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                 LocalDateTime localDate = LocalDateTime.now();
                 Timestamp currentDate = Timestamp.valueOf(localDate);
                 Timestamp maxDate = Timestamp.valueOf(localDate.plusDays(1));
@@ -358,12 +350,13 @@ public class Controleur extends HttpServlet {
                     this.getServletContext().getRequestDispatcher("/Erreur.jsp").include(request, response);
                 }
             } catch (MonException m) {
+                m.printStackTrace();
                 // On passe l'erreur à  la page JSP
                 request.setAttribute("MesErreurs", m.getMessage());
                 request.getRequestDispatcher("PostMessage.jsp").forward(request, response);
             } catch (Exception e) {
+                e.printStackTrace();
                 // On passe l'erreur à la page JSP
-                System.out.println("Erreur client  :" + e.getMessage());
                 request.setAttribute("MesErreurs", e.getMessage());
                 request.getRequestDispatcher("PostMessage.jsp").forward(request, response);
             }
@@ -376,27 +369,6 @@ public class Controleur extends HttpServlet {
                 int nbV = Integer.parseInt(request.getParameter("idV"));
 
                 List<BorneEntity> listBorne = borneService.getListBorneByStationWithVehicule(idStation);
-                /*
-                BorneEntity borneFinale = null;
-                int i=0;
-                boolean boucle = true;
-                int id;
-                int idRecup;
-
-                while(boucle && i<nbV) {
-                    for (BorneEntity borne : listBorne) {
-                        id = borne.getVehicule().getTypeVehicule().getIdTypeVehicule();
-                        idRecup = Integer.parseInt(request.getParameter("id"+i));
-
-                        if (id == idRecup) {
-                            borneFinale = borne;
-                            boucle = false;
-                            break;
-                        }
-                    }
-                    i++;
-                }
-                */
 
                 ReservationService resaService = new ReservationService();
 
@@ -434,7 +406,9 @@ public class Controleur extends HttpServlet {
                 int idBorne = Integer.parseInt(request.getParameter("idBorne"));
 
                 UtiliseEntity useFinal = null;
+
                 UtilisationService useService = new UtilisationService();
+
                 List<UtiliseEntity> listUse = useService.consulterListeUtilisations(idClient);
 
                 for (UtiliseEntity use : listUse) {
@@ -453,62 +427,18 @@ public class Controleur extends HttpServlet {
                 EnvoiUtilise unEnvoi = new EnvoiUtilise();
                 boolean ok = unEnvoi.publier(utilise,topic,cf);
                 if (ok) {
-                    // On retourne à la page d'accueil
                     this.getServletContext().getRequestDispatcher("/index.jsp").include(request, response);
                 } else {
                     this.getServletContext().getRequestDispatcher("/Erreur.jsp").include(request, response);
                 }
-
-/*
-                ClientEntity clientEntity = clientService.consulterClientById(idClient);
-                BorneEntity borne = borneService.consulterBorneById(idClient);
-
-                Client client = new Client();
-                client.setIdClient(clientEntity.getIdClient());
-                client.setDateNaissance(clientEntity.getDateNaissance());
-                client.setLogin(clientEntity.getLogin());
-                client.setMotdepasse(clientEntity.getMotdepasse());
-                client.setNom(clientEntity.getNom());
-                client.setPrenom(clientEntity.getPrenom());
-
-                TypeVehicule typeVehicule = new TypeVehicule();
-                typeVehicule.setIdTypeVehicule(useFinal.getVehicule().getTypeVehicule().getIdTypeVehicule());
-                typeVehicule.setCategorie(useFinal.getVehicule().getTypeVehicule().getCategorie());
-                typeVehicule.setTypeVehicule(useFinal.getVehicule().getTypeVehicule().getTypeVehicule());
-
-                Vehicule vehicule = new Vehicule();
-                vehicule.setIdVehicule(useFinal.getVehicule().getIdVehicule());
-                vehicule.setDisponibilite(useFinal.getVehicule().getDisponibilite());
-                vehicule.setEtatBatterie(useFinal.getVehicule().getEtatBatterie());
-                vehicule.setLatitude(useFinal.getVehicule().getLatitude());
-                vehicule.setLongitude(useFinal.getVehicule().getLongitude());
-                vehicule.setRfid(useFinal.getVehicule().getRfid());
-                vehicule.setTypeVehicule(typeVehicule);
-
-                Borne borneDepart = new Borne();
-                borneDepart.setIdBorne(useFinal.getBorneDepart().getIdBorne());
-                borneDepart.setEtatBorne(useFinal.getBorneDepart().getEtatBorne());
-                borneDepart.setVehicule(vehicule);
-
-                Borne borneArrivee = new Borne();
-                borneArrivee.setIdBorne(borne.getIdBorne());
-                borneArrivee.setEtatBorne((byte) 0);
-                borneArrivee.setVehicule(vehicule);
-
-                Utilise utilise = new Utilise();
-                utilise.setClient(client);
-                utilise.setVehicule(vehicule);
-                utilise.setDate(useFinal.getDate());
-                utilise.setBorneDepart(borneDepart);
-                utilise.setBorneArrivee(borneArrivee);
-*/
             } catch (MonException m) {
+                m.printStackTrace();
                 // On passe l'erreur à  la page JSP
                 request.setAttribute("MesErreurs", m.getMessage());
                 request.getRequestDispatcher("PostMessage.jsp").forward(request, response);
             } catch (Exception e) {
+                e.printStackTrace();
                 // On passe l'erreur à la page JSP
-                System.out.println("Erreur client  :" + e.getMessage());
                 request.setAttribute("MesErreurs", e.getMessage());
                 request.getRequestDispatcher("PostMessage.jsp").forward(request, response);
             }
@@ -524,7 +454,6 @@ public class Controleur extends HttpServlet {
                 StationService stationService = new StationService();
                 UtilisationService useService = new UtilisationService();
 
-                // Erreur ici, probleme provenant probablement de UtiliseEntity
                 List<UtiliseEntity> listUse = useService.consulterListeUtilisations(idClient);
                 UtiliseEntity useFinal = null;
 
@@ -569,6 +498,56 @@ public class Controleur extends HttpServlet {
                 utilise.setDate(currentDate);
                 utilise.setBorneDepart(idBorne);
 
+                ReservationService resaService = new ReservationService();
+                VehiculeService vehiculeService = new VehiculeService();
+                ClientService clientService = new ClientService();
+
+                List<ReservationEntity> listResa = resaService.consulterListeReservations(idClient);
+                ReservationEntity resaFinal = null;
+
+
+                if (listResa != null) {
+                    for (ReservationEntity resa: listResa) {
+                        if (currentDate.after(resa.getDateReservation()) && currentDate.before(resa.getDateEcheance())) {
+                            resaFinal = resa;
+                            VehiculeEntity vehiculeEntity = vehiculeService.consulterVehiculeById(resaFinal.getVehicule().getIdVehicule());
+                            ClientEntity clientEntity = clientService.consulterClientById(idClient);
+
+                            Client client = new Client();
+                            client.setIdClient(clientEntity.getIdClient());
+                            client.setDateNaissance(clientEntity.getDateNaissance());
+                            client.setLogin(clientEntity.getLogin());
+                            client.setMotdepasse(clientEntity.getMotdepasse());
+                            client.setNom(clientEntity.getNom());
+                            client.setPrenom(clientEntity.getPrenom());
+
+                            TypeVehicule typeVehicule = new TypeVehicule();
+                            typeVehicule.setIdTypeVehicule(vehiculeEntity.getTypeVehicule().getIdTypeVehicule());
+                            typeVehicule.setCategorie(vehiculeEntity.getTypeVehicule().getCategorie());
+                            typeVehicule.setTypeVehicule(vehiculeEntity.getTypeVehicule().getTypeVehicule());
+
+                            Vehicule vehicule = new Vehicule();
+                            vehicule.setIdVehicule(vehiculeEntity.getIdVehicule());
+                            vehicule.setDisponibilite(vehiculeEntity.getDisponibilite());
+                            vehicule.setEtatBatterie(vehiculeEntity.getEtatBatterie());
+                            vehicule.setLatitude(vehiculeEntity.getLatitude());
+                            vehicule.setLongitude(vehiculeEntity.getLongitude());
+                            vehicule.setRfid(vehiculeEntity.getRfid());
+                            vehicule.setTypeVehicule(typeVehicule);
+
+                            Reservation reservation = new Reservation();
+                            reservation.setClient(client);
+                            reservation.setDateEcheance(resa.getDateEcheance());
+                            reservation.setDateReservation(resa.getDateReservation());
+                            reservation.setVehicule(vehicule);
+
+                            EnvoiReservation unEnvoi2 = new EnvoiReservation();
+                            unEnvoi2.publier(reservation,topic,cf);
+                            break;
+                        }
+                    }
+                }
+
                 EnvoiUtilise unEnvoi = new EnvoiUtilise();
                 boolean ok = unEnvoi.publier(utilise,topic,cf);
                 if (ok) {
@@ -577,13 +556,15 @@ public class Controleur extends HttpServlet {
                 } else {
                     this.getServletContext().getRequestDispatcher("/Erreur.jsp").include(request, response);
                 }
+
             } catch (MonException m) {
+                m.printStackTrace();
                 // On passe l'erreur à  la page JSP
                 request.setAttribute("MesErreurs", m.getMessage());
                 request.getRequestDispatcher("PostMessage.jsp").forward(request, response);
             } catch (Exception e) {
+                e.printStackTrace();
                 // On passe l'erreur à la page JSP
-                System.out.println("Erreur client  :" + e.getMessage());
                 request.setAttribute("MesErreurs", e.getMessage());
                 request.getRequestDispatcher("PostMessage.jsp").forward(request, response);
             }
@@ -609,7 +590,7 @@ public class Controleur extends HttpServlet {
 
                 if (listAllResa != null) {
                     for (ReservationEntity resa: listAllResa) {
-                        if (currentDate.after(resa.getDateReservation()) && currentDate.before(resa.getDateEcheance())) {
+                        if(currentDate.after(resa.getDateReservation()) && currentDate.before(resa.getDateEcheance())){
                             if(resa.getClient().getIdClient() == idClient) {
                                 resaBooked.add(resa);
                             }else{
@@ -631,60 +612,6 @@ public class Controleur extends HttpServlet {
             }
 
             this.getServletContext().getRequestDispatcher(destinationPage).include(request, response);
-        }
-        else if (ENVOI_INSCRIPTION.equals(actionName)) {
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-            response.setContentType("text/html;charset=UTF-8");
-            // On récupère les informations sisies
-            String nom = request.getParameter("nom");
-            String prenom = request.getParameter("prenom");
-
-            if ((nom != null) && (prenom != null)) {
-                try {
-                    // On récupère la valeur des autres champs saisis par
-                    // l'utilisateur
-                    // on transfome la date
-                    // au format Mysql java.sql.Date
-                    String datenaissance = request.getParameter("datenaissance");
-                    java.util.Date initDate = new SimpleDateFormat("dd/MM/yyyy").parse(datenaissance);
-                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-                    String parsedDate = formatter.format(initDate);
-                    initDate = formatter.parse(parsedDate);
-                    Date uneDate = new Date(initDate.getTime());
-
-                    String adresse = request.getParameter("adresse");
-                    String cpostal = request.getParameter("cpostal");
-                    String ville = request.getParameter("ville");
-
-                    // On crée une demande d'inscription avec ces valeurs
-                    Inscription unedemande = new Inscription();
-                    unedemande.setNomcandidat(nom);
-                    unedemande.setPrenomcandidat(prenom);
-                    unedemande.setDatenaissance(uneDate);
-                    unedemande.setAdresse(adresse);
-                    unedemande.setCpostal(cpostal);
-                    unedemande.setVille(ville);
-
-                    // On envoie cette demande d'inscription dans le topic
-                    EnvoiInsciption unEnvoi = new EnvoiInsciption();
-                    boolean ok = unEnvoi.publier(unedemande,topic,cf);
-                    if (ok) {
-                        // On retourne àla page d'accueil
-                        this.getServletContext().getRequestDispatcher("/index.jsp").include(request, response);
-                    } else {
-                        this.getServletContext().getRequestDispatcher("/Erreur.jsp").include(request, response);
-                    }
-                } catch (MonException m) {
-                    // On passe l'erreur à  la page JSP
-                    request.setAttribute("MesErreurs", m.getMessage());
-                    request.getRequestDispatcher("PostMessage.jsp").forward(request, response);
-                } catch (Exception e) {
-                    // On passe l'erreur à la page JSP
-                    System.out.println("Erreur client  :" + e.getMessage());
-                    request.setAttribute("MesErreurs", e.getMessage());
-                    request.getRequestDispatcher("PostMessage.jsp").forward(request, response);
-                }
-            }
         }else{
             this.getServletContext().getRequestDispatcher("/Erreur.jsp").include(request, response);
         }
