@@ -10,7 +10,7 @@
 	</div>
 
 	<div class="container">
-		<a class="btn btn-secondary" href="index.jsp" role="button"><span class="glyphicon glyphicon-menu-left"></span> Retour accueil</a>
+		<a class="btn btn-secondary" href="Controleur?action=map" role="button"><span class="glyphicon glyphicon-menu-left"></span> Retour accueil</a>
 		<h2>Bornes disponibles</h2>
 		<div class="container">
 			<table class="table table-hover">

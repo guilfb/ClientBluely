@@ -11,7 +11,9 @@
 
 	<div class="container">
 		<a class="btn btn-secondary" href="index.jsp" role="button"><span class="glyphicon glyphicon-menu-left"></span> Retour accueil</a>
+
 		<h2>Mes réservations</h2>
+
 		<div class="container">
 			<table class="table table-hover">
 				<tr>

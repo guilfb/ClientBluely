@@ -13,9 +13,9 @@
 <%@include file="navigation.jsp"%>
 <div class="jumbotron text-center">
 
-    <h1>Bienvenue sur la médiathèque de Polytech</h1>
+    <h1>Bienvenue sur le site de Bluely</h1>
 </div>
-<h2>Sélectionnez dans le menu la fonctionnalité voulue !</h2>
+<h2>Sélectionnez dans le menu latéral la fonctionnalité voulue !</h2>
 <%@include file="footer.jsp"%>
 </body>
 </html>
