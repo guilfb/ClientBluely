@@ -2,7 +2,6 @@ package service;
 
 import meserreurs.MonException;
 import metier.ClientEntity;
-import metier.UtilisateurEntity;
 
 import javax.persistence.EntityTransaction;
 import java.util.List;

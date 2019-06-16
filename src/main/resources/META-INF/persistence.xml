@@ -8,7 +8,6 @@
         <class>metier.ReservationEntityPK</class>
         <class>metier.StationEntity</class>
         <class>metier.TypeVehiculeEntity</class>
-        <class>metier.UtilisateurEntity</class>
         <class>metier.UtiliseEntity</class>
         <class>metier.UtiliseEntityPK</class>
         <class>metier.VehiculeEntity</class>
